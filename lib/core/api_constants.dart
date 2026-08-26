@@ -1,7 +1,5 @@
-
 class ApiConstants {
   const ApiConstants._();
-
 
   static const String latestBaseUrl =
       'https://latest.currency-api.pages.dev/v1/currencies';
@@ -9,7 +7,7 @@ class ApiConstants {
   static String historicalBaseUrl(String date) =>
       'https://$date.currency-api.pages.dev/v1/currencies';
 
-        static const String baseCurrency = 'egp';
+  static const String baseCurrency = 'egp';
 
   static String get ratesPath => '$baseCurrency.json';
 

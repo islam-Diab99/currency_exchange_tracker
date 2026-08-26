@@ -1,30 +1,74 @@
 /// Low-level exceptions thrown by the data layer.
 ///
-/// Data sources throw these; the repository catches them and maps them to
-/// [Failure]s so the domain/presentation layers never deal with raw errors.
+/// Data sources throw these; repositories turn them into [Failure]s via
+/// [mapExceptionToFailure]. No Dio/HTTP types leak in here — [mapDioException]
+/// is the single place that knows Dio.
 library;
 
-/// Thrown when the remote API responds with a non-success status or the
-/// request fails at the transport level.
-class ServerException implements Exception {
-  const ServerException([this.message = 'Server error']);
+/// Base type for everything the data layer can throw.
+sealed class AppException implements Exception {
+  const AppException(this.message, {this.statusCode});
   final String message;
+  final int? statusCode;
 }
 
-/// Thrown when there is no network connectivity.
-class NetworkException implements Exception {
-  const NetworkException([this.message = 'No internet connection']);
-  final String message;
+/// No network connectivity (host lookup failed, connection refused, etc.).
+class NetworkException extends AppException {
+  const NetworkException([super.message = 'No internet connection']);
 }
 
-/// Thrown when the cache is read but holds no (or unreadable) data.
-class CacheException implements Exception {
-  const CacheException([this.message = 'No cached data available']);
-  final String message;
+/// The request outlived its connect/send/receive timeout.
+class TimeoutException extends AppException {
+  const TimeoutException([super.message = 'The request timed out']);
 }
 
-/// Thrown when a response is received but does not contain the expected data.
-class ParseException implements Exception {
-  const ParseException([this.message = 'Unexpected data format']);
-  final String message;
+/// 401 — missing/expired credentials.
+class UnauthorizedException extends AppException {
+  const UnauthorizedException([super.message = 'Unauthorized'])
+    : super(statusCode: 401);
+}
+
+/// 403 — authenticated but not allowed.
+class ForbiddenException extends AppException {
+  const ForbiddenException([super.message = 'Forbidden'])
+    : super(statusCode: 403);
+}
+
+/// 404 — resource not found.
+class NotFoundException extends AppException {
+  const NotFoundException([super.message = 'Not found'])
+    : super(statusCode: 404);
+}
+
+/// 422 — request understood but validation failed.
+class ValidationException extends AppException {
+  const ValidationException([super.message = 'Validation failed'])
+    : super(statusCode: 422);
+}
+
+/// 429 — too many requests.
+class RateLimitException extends AppException {
+  const RateLimitException([super.message = 'Too many requests'])
+    : super(statusCode: 429);
+}
+
+/// 500+ — the server errored.
+class ServerException extends AppException {
+  const ServerException([super.message = 'Server error', int? statusCode])
+    : super(statusCode: statusCode);
+}
+
+/// A response arrived but wasn't in the expected shape.
+class ParseException extends AppException {
+  const ParseException([super.message = 'Unexpected data format']);
+}
+
+/// The cache was read but held no (or unreadable) data.
+class CacheException extends AppException {
+  const CacheException([super.message = 'No cached data available']);
+}
+
+/// Anything we didn't anticipate.
+class UnknownException extends AppException {
+  const UnknownException([super.message = 'Unexpected error']);
 }
