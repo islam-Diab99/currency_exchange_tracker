@@ -3,20 +3,39 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/error/result_guard.dart';
+import '../../../../core/network/network_info.dart';
 import '../../domain/entities/exchange_rate.dart';
 import '../../domain/entities/rate_point.dart';
 import '../../domain/entities/rates_snapshot.dart';
 import '../../domain/repositories/rates_repository.dart';
 import '../../domain/supported_currencies.dart';
+import '../datasources/rates_local_data_source.dart';
 import '../datasources/rates_remote_data_source.dart';
 
-class RatesRepositoryImpl implements RatesRepository {
-  RatesRepositoryImpl(this._remote);
+class RatesRepositoryImpl with ResultGuard implements RatesRepository {
+  RatesRepositoryImpl({
+    required RatesRemoteDataSource remote,
+    required RatesLocalDataSource local,
+    required NetworkInfo network,
+  }) : _remote = remote,
+       _local = local,
+       _network = network;
+
   final RatesRemoteDataSource _remote;
+  final RatesLocalDataSource _local;
+  final NetworkInfo _network;
 
   @override
   Future<Either<Failure, RatesSnapshot>> getLatestRates() async {
-    try {
+    // Offline: don't attempt the network (it would only hang until the Dio
+    // connect timeout) — serve the last good snapshot straight from cache.
+    if (!await _network.isConnected) {
+      return _cachedOr(const NetworkFailure());
+    }
+
+    // `guard` maps any thrown exception to a Failure.
+    final result = await guard<RatesSnapshot>(() async {
       final now = DateTime.now();
       final yesterdayDate = DateTime(
         now.year,
@@ -48,21 +67,35 @@ class RatesRepositoryImpl implements RatesRepository {
       }
 
       if (rates.isEmpty) {
-        return const Left(ParseFailure('No rates in the response.'));
+        throw const ParseException('No rates in the response.');
       }
-      return Right(RatesSnapshot(rates: rates, lastUpdated: DateTime.now()));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on ParseException catch (e) {
-      return Left(ParseFailure(e.message));
+
+      final snapshot = RatesSnapshot(rates: rates, lastUpdated: DateTime.now());
+      await _local.cacheSnapshot(snapshot);
+      return snapshot;
+    });
+
+    // Any load failure (incl. a transport-level error, or an empty response)
+    // falls back to the last good snapshot if we have one.
+    return result.fold(_cachedOr, (snapshot) async => Right(snapshot));
+  }
+
+  /// Returns cached data if present, otherwise the given [failure]. Lets a
+  /// failed/offline load fall back to the last good snapshot instead of erroring.
+  Future<Either<Failure, RatesSnapshot>> _cachedOr(Failure failure) async {
+    if (!_local.hasCache) return Left(failure);
+    try {
+      return Right(await _local.getCachedSnapshot());
+    } on CacheException {
+      return Left(failure);
     }
   }
 
   Future<RatesResponseModel?> _tryDay(DateTime date) async {
     try {
       return await _remote.getRatesForDate(date);
-    } on ServerException {
-      return null; // change just won't show for missing days
+    } on AppException {
+      return null; // a single day's blip shouldn't fail the whole load
     }
   }
 
@@ -71,8 +104,12 @@ class RatesRepositoryImpl implements RatesRepository {
     String currencyCode, {
     int days = 7,
   }) async {
+    // Offline: fail fast. There's no history cache to fall back on (unlike
+    // getLatestRates), so surface the network failure without hitting Dio.
+    if (!await _network.isConnected) return const Left(NetworkFailure());
+
     final key = currencyCode.toLowerCase();
-    try {
+    return guard(() async {
       final latest = await _remote.getLatestRates();
       final anchor = DateTime(
         latest.date.year,
@@ -87,7 +124,7 @@ class RatesRepositoryImpl implements RatesRepository {
             return await _remote.getRatesForDate(
               anchor.subtract(Duration(days: offset)),
             );
-          } on ServerException {
+          } on AppException {
             return null;
           }
         }),
@@ -108,16 +145,10 @@ class RatesRepositoryImpl implements RatesRepository {
       points.sort((a, b) => a.date.compareTo(b.date));
 
       if (points.isEmpty) {
-        return const Left(
-          ParseFailure('No historical data for this currency.'),
-        );
+        throw const ParseException('No historical data for this currency.');
       }
-      return Right(points);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on ParseException catch (e) {
-      return Left(ParseFailure(e.message));
-    }
+      return points;
+    });
   }
 
   /// EGP→foreign  ->  EGP per one foreign unit.

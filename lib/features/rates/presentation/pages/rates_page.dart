@@ -5,6 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../domain/entities/exchange_rate.dart';
 import '../bloc/rate_detail/rate_detail_bloc.dart';
 import '../bloc/rates_list_bloc.dart';
+import '../widgets/offline_banner.dart';
 import '../widgets/rate_card.dart';
 import '../widgets/rates_header.dart';
 import '../widgets/rates_legend.dart';
@@ -87,26 +88,33 @@ class _RatesList extends StatelessWidget {
             .firstWhere((s) => s.status != RatesListStatus.loading)
             .timeout(const Duration(seconds: 20), onTimeout: () => bloc.state);
       },
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(top: 8, bottom: 16),
-        // +1 for the header row.
-        itemCount: rates.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Column(
-              children: [
-                RatesHeader(lastUpdated: snapshot.lastUpdated),
-                const RatesLegend(),
-              ],
-            );
-          }
-          final rate = rates[index - 1];
-          return RateCard(
-            rate: rate,
-            onTap: () => _openDetail(context, rate, snapshot.lastUpdated),
-          );
-        },
+      child: Column(
+        children: [
+          if (state.isOffline) OfflineBanner(lastUpdated: snapshot.lastUpdated),
+          Expanded(
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 8, bottom: 16),
+              // +1 for the header row.
+              itemCount: rates.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    children: [
+                      RatesHeader(lastUpdated: snapshot.lastUpdated),
+                      const RatesLegend(),
+                    ],
+                  );
+                }
+                final rate = rates[index - 1];
+                return RateCard(
+                  rate: rate,
+                  onTap: () => _openDetail(context, rate, snapshot.lastUpdated),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

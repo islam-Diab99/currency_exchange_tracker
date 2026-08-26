@@ -13,3 +13,10 @@ class RatesListRequested extends RatesListEvent {
 class RatesListRefreshed extends RatesListEvent {
   const RatesListRefreshed();
 }
+
+class RatesListConnectivityChanged extends RatesListEvent {
+  const RatesListConnectivityChanged({required this.isConnected});
+  final bool isConnected;
+  @override
+  List<Object?> get props => [isConnected];
+}

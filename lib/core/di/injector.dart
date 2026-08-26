@@ -1,5 +1,6 @@
 import 'package:axis_assessment/core/network/dio_client.dart';
 import 'package:axis_assessment/core/network/network_info.dart';
+import 'package:axis_assessment/features/rates/data/datasources/rates_local_data_source.dart';
 import 'package:axis_assessment/features/rates/data/datasources/rates_remote_data_source.dart';
 import 'package:axis_assessment/features/rates/data/repository/rates_repository_impl.dart';
 import 'package:axis_assessment/features/rates/domain/repositories/rates_repository.dart';
@@ -9,6 +10,7 @@ import 'package:axis_assessment/features/rates/presentation/bloc/rate_detail/rat
 import 'package:axis_assessment/features/rates/presentation/bloc/rates_list_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 final GetIt sl = GetIt.instance;
@@ -21,11 +23,21 @@ Future<void> configureDependencies() async {
   // --- Core ---
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
+  // Open the cache box once and register it for the local data source to use.
+  final box = await Hive.openBox<dynamic>(RatesLocalDataSourceImpl.boxName);
+  sl.registerSingleton<Box<dynamic>>(box);
+
   // --- Rates: data ---
-  sl.registerLazySingleton<RatesRemoteDataSource>(
-    () => RatesRemoteDataSourceImpl(sl()),
-  );
-  sl.registerLazySingleton<RatesRepository>(() => RatesRepositoryImpl(sl()));
+  sl
+    ..registerLazySingleton<RatesRemoteDataSource>(
+      () => RatesRemoteDataSourceImpl(sl()),
+    )
+    ..registerLazySingleton<RatesLocalDataSource>(
+      () => RatesLocalDataSourceImpl(sl()),
+    )
+    ..registerLazySingleton<RatesRepository>(
+      () => RatesRepositoryImpl(remote: sl(), local: sl(), network: sl()),
+    );
 
   // --- Rates: domain ---
   sl
@@ -34,6 +46,8 @@ Future<void> configureDependencies() async {
 
   // --- Rates: presentation ---
   sl
-    ..registerFactory(() => RatesListBloc(getLatestRates: sl()))
+    ..registerFactory(
+      () => RatesListBloc(getLatestRates: sl(), networkInfo: sl()),
+    )
     ..registerFactory(() => RateDetailBloc(getRateHistory: sl()));
 }

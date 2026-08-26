@@ -1,5 +1,6 @@
 import 'package:axis_assessment/core/api_constants.dart';
 import 'package:axis_assessment/core/error/exceptions.dart';
+import 'package:axis_assessment/core/network/dio_exception_mapper.dart';
 import 'package:axis_assessment/features/rates/data/model/rates_response_model.dart';
 import 'package:dio/dio.dart';
 
@@ -31,7 +32,7 @@ class RatesRemoteDataSourceImpl implements RatesRemoteDataSource {
       if (data == null) throw const ParseException('Empty response');
       return RatesResponseModel.fromJson(data, base: ApiConstants.baseCurrency);
     } on DioException catch (e) {
-      throw ServerException(e.message ?? 'Network error');
+      throw mapDioException(e);
     }
   }
 
