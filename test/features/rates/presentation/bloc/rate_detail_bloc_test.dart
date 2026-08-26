@@ -24,8 +24,9 @@ void main() {
 
   blocTest<RateDetailBloc, RateDetailState>(
     'emits [loading, success] with the history points',
-    setUp: () => when(() => getRateHistory(any()))
-        .thenAnswer((_) async => Right(points)),
+    setUp: () => when(
+      () => getRateHistory(any()),
+    ).thenAnswer((_) async => Right(points)),
     build: build,
     act: (bloc) => bloc.add(const RateHistoryRequested('USD')),
     expect: () => [
@@ -36,8 +37,9 @@ void main() {
 
   blocTest<RateDetailBloc, RateDetailState>(
     'emits [loading, failure] with the error message',
-    setUp: () => when(() => getRateHistory(any()))
-        .thenAnswer((_) async => const Left(NetworkFailure())),
+    setUp: () => when(
+      () => getRateHistory(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure())),
     build: build,
     act: (bloc) => bloc.add(const RateHistoryRequested('USD')),
     expect: () => [

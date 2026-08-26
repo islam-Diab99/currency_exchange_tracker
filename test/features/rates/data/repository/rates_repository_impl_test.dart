@@ -38,10 +38,12 @@ void main() {
     });
 
     test('inverts raw rates to EGP-per-unit and caches the snapshot', () async {
-      when(() => remote.getLatestRates())
-          .thenAnswer((_) async => responseModel());
-      when(() => remote.getRatesForDate(any()))
-          .thenAnswer((_) async => responseModel(rawRates: const {'usd': 0.0195}));
+      when(
+        () => remote.getLatestRates(),
+      ).thenAnswer((_) async => responseModel());
+      when(
+        () => remote.getRatesForDate(any()),
+      ).thenAnswer((_) async => responseModel(rawRates: const {'usd': 0.0195}));
 
       final result = await repository.getLatestRates();
 
@@ -56,10 +58,12 @@ void main() {
     });
 
     test("tolerates a missing yesterday — previousRate is null", () async {
-      when(() => remote.getLatestRates())
-          .thenAnswer((_) async => responseModel());
-      when(() => remote.getRatesForDate(any()))
-          .thenThrow(const NetworkException());
+      when(
+        () => remote.getLatestRates(),
+      ).thenAnswer((_) async => responseModel());
+      when(
+        () => remote.getRatesForDate(any()),
+      ).thenThrow(const NetworkException());
 
       final result = await repository.getLatestRates();
 
@@ -71,33 +75,35 @@ void main() {
     test('falls back to cache when the network load throws', () async {
       when(() => remote.getLatestRates()).thenThrow(const NetworkException());
       when(() => local.hasCache).thenReturn(true);
-      when(() => local.getCachedSnapshot())
-          .thenAnswer((_) async => snapshot(fromCache: true));
+      when(
+        () => local.getCachedSnapshot(),
+      ).thenAnswer((_) async => snapshot(fromCache: true));
 
       final result = await repository.getLatestRates();
 
       expect(result.isRight(), isTrue);
-      expect(
-        result.getOrElse(() => throw StateError('r')).fromCache,
-        isTrue,
-      );
+      expect(result.getOrElse(() => throw StateError('r')).fromCache, isTrue);
     });
 
-    test('returns the failure when the load throws and no cache exists',
-        () async {
-      when(() => remote.getLatestRates()).thenThrow(const NetworkException());
-      when(() => local.hasCache).thenReturn(false);
+    test(
+      'returns the failure when the load throws and no cache exists',
+      () async {
+        when(() => remote.getLatestRates()).thenThrow(const NetworkException());
+        when(() => local.hasCache).thenReturn(false);
 
-      final result = await repository.getLatestRates();
+        final result = await repository.getLatestRates();
 
-      expect(result.isLeft(), isTrue);
-    });
+        expect(result.isLeft(), isTrue);
+      },
+    );
 
     test('an empty response with no cache surfaces a ParseFailure', () async {
-      when(() => remote.getLatestRates())
-          .thenAnswer((_) async => responseModel(rawRates: const {}));
-      when(() => remote.getRatesForDate(any()))
-          .thenAnswer((_) async => responseModel(rawRates: const {}));
+      when(
+        () => remote.getLatestRates(),
+      ).thenAnswer((_) async => responseModel(rawRates: const {}));
+      when(
+        () => remote.getRatesForDate(any()),
+      ).thenAnswer((_) async => responseModel(rawRates: const {}));
       when(() => local.hasCache).thenReturn(false);
 
       final result = await repository.getLatestRates();
@@ -114,15 +120,13 @@ void main() {
 
     test('serves the cached snapshot without touching the network', () async {
       when(() => local.hasCache).thenReturn(true);
-      when(() => local.getCachedSnapshot())
-          .thenAnswer((_) async => snapshot(fromCache: true));
+      when(
+        () => local.getCachedSnapshot(),
+      ).thenAnswer((_) async => snapshot(fromCache: true));
 
       final result = await repository.getLatestRates();
 
-      expect(
-        result.getOrElse(() => throw StateError('r')).fromCache,
-        isTrue,
-      );
+      expect(result.getOrElse(() => throw StateError('r')).fromCache, isTrue);
       verifyNever(() => remote.getLatestRates());
     });
 
@@ -143,9 +147,9 @@ void main() {
     setUp(goOnline);
 
     test('returns the available points sorted oldest-first', () async {
-      when(() => remote.getLatestRates()).thenAnswer(
-        (_) async => responseModel(date: DateTime(2026, 6, 7)),
-      );
+      when(
+        () => remote.getLatestRates(),
+      ).thenAnswer((_) async => responseModel(date: DateTime(2026, 6, 7)));
       // Echo each requested date back so we get seven distinct points.
       when(() => remote.getRatesForDate(any())).thenAnswer((invocation) async {
         final date = invocation.positionalArguments.first as DateTime;
@@ -161,47 +165,52 @@ void main() {
     });
 
     test('tolerates failing days and still returns the anchor point', () async {
-      when(() => remote.getLatestRates())
-          .thenAnswer((_) async => responseModel(date: DateTime(2026, 6, 7)));
-      when(() => remote.getRatesForDate(any()))
-          .thenThrow(const ServerException());
+      when(
+        () => remote.getLatestRates(),
+      ).thenAnswer((_) async => responseModel(date: DateTime(2026, 6, 7)));
+      when(
+        () => remote.getRatesForDate(any()),
+      ).thenThrow(const ServerException());
 
       final result = await repository.getRateHistory('USD');
 
-      expect(
-        result.getOrElse(() => throw StateError('r')),
-        hasLength(1),
-      );
+      expect(result.getOrElse(() => throw StateError('r')), hasLength(1));
     });
 
-    test('surfaces ParseFailure when the currency is absent everywhere',
-        () async {
-      when(() => remote.getLatestRates())
-          .thenAnswer((_) async => responseModel(rawRates: const {}));
-      when(() => remote.getRatesForDate(any()))
-          .thenThrow(const ServerException());
+    test(
+      'surfaces ParseFailure when the currency is absent everywhere',
+      () async {
+        when(
+          () => remote.getLatestRates(),
+        ).thenAnswer((_) async => responseModel(rawRates: const {}));
+        when(
+          () => remote.getRatesForDate(any()),
+        ).thenThrow(const ServerException());
 
-      final result = await repository.getRateHistory('USD');
+        final result = await repository.getRateHistory('USD');
 
-      result.fold(
-        (f) => expect(f, isA<ParseFailure>()),
-        (_) => fail('expected a Left'),
-      );
-    });
+        result.fold(
+          (f) => expect(f, isA<ParseFailure>()),
+          (_) => fail('expected a Left'),
+        );
+      },
+    );
   });
 
   group('getRateHistory — offline', () {
     setUp(goOffline);
 
-    test('fails fast with NetworkFailure and never calls the network',
-        () async {
-      final result = await repository.getRateHistory('USD');
+    test(
+      'fails fast with NetworkFailure and never calls the network',
+      () async {
+        final result = await repository.getRateHistory('USD');
 
-      result.fold(
-        (f) => expect(f, isA<NetworkFailure>()),
-        (_) => fail('expected a Left'),
-      );
-      verifyNever(() => remote.getLatestRates());
-    });
+        result.fold(
+          (f) => expect(f, isA<NetworkFailure>()),
+          (_) => fail('expected a Left'),
+        );
+        verifyNever(() => remote.getLatestRates());
+      },
+    );
   });
 }

@@ -43,7 +43,11 @@ void main() {
       );
       expect(
         mapExceptionToFailure(const ValidationException('bad input')),
-        isA<ValidationFailure>().having((f) => f.message, 'message', 'bad input'),
+        isA<ValidationFailure>().having(
+          (f) => f.message,
+          'message',
+          'bad input',
+        ),
       );
       expect(
         mapExceptionToFailure(const ParseException('weird shape')),

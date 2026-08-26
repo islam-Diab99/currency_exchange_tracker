@@ -6,10 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final options = RequestOptions(path: '/egp.json');
 
-  DioException dioError(
-    DioExceptionType type, {
-    Response<dynamic>? response,
-  }) => DioException(requestOptions: options, type: type, response: response);
+  DioException dioError(DioExceptionType type, {Response<dynamic>? response}) =>
+      DioException(requestOptions: options, type: type, response: response);
 
   Response<dynamic> response(int? status, {dynamic data}) => Response<dynamic>(
     requestOptions: options,
@@ -57,7 +55,10 @@ void main() {
 
   group('mapDioException — HTTP status codes', () {
     AppException mapStatus(int? code, {dynamic data}) => mapDioException(
-      dioError(DioExceptionType.badResponse, response: response(code, data: data)),
+      dioError(
+        DioExceptionType.badResponse,
+        response: response(code, data: data),
+      ),
     );
 
     test('translates known client codes', () {

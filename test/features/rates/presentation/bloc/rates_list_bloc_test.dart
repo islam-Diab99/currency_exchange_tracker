@@ -20,14 +20,13 @@ void main() {
     networkInfo = MockNetworkInfo();
     // The bloc subscribes to this in its constructor; keep it inert so tests
     // drive connectivity through explicit events instead of stream timing.
-    when(() => networkInfo.onConnectivityChanged)
-        .thenAnswer((_) => const Stream<bool>.empty());
+    when(
+      () => networkInfo.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream<bool>.empty());
   });
 
-  RatesListBloc build() => RatesListBloc(
-    getLatestRates: getLatestRates,
-    networkInfo: networkInfo,
-  );
+  RatesListBloc build() =>
+      RatesListBloc(getLatestRates: getLatestRates, networkInfo: networkInfo);
 
   void stubLatest(Either<Failure, RatesSnapshot> result) =>
       when(() => getLatestRates(any())).thenAnswer((_) async => result);

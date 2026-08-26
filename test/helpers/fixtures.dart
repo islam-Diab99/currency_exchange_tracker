@@ -33,9 +33,7 @@ RatesResponseModel responseModel({
 /// repository sets when it serves the local cache.
 RatesSnapshot snapshot({bool fromCache = false}) {
   return RatesSnapshot(
-    rates: [
-      ExchangeRate(currency: usd, rate: 52.01, previousRate: 51.00),
-    ],
+    rates: [ExchangeRate(currency: usd, rate: 52.01, previousRate: 51.00)],
     lastUpdated: DateTime(2026, 6, 1, 12),
     fromCache: fromCache,
   );

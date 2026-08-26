@@ -7,8 +7,7 @@ import 'package:axis_assessment/features/rates/domain/usecases/get_latest_rates.
 import 'package:axis_assessment/features/rates/domain/usecases/get_rate_history.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockRatesRemoteDataSource extends Mock
-    implements RatesRemoteDataSource {}
+class MockRatesRemoteDataSource extends Mock implements RatesRemoteDataSource {}
 
 class MockRatesLocalDataSource extends Mock implements RatesLocalDataSource {}
 
