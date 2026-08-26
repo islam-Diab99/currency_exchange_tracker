@@ -1,8 +1,6 @@
 import 'package:axis_assessment/core/api_constants.dart';
-import 'package:axis_assessment/core/error/exceptions.dart';
-import 'package:axis_assessment/core/network/dio_exception_mapper.dart';
+import 'package:axis_assessment/core/network/api_client.dart';
 import 'package:axis_assessment/features/rates/data/model/rates_response_model.dart';
-import 'package:dio/dio.dart';
 
 abstract interface class RatesRemoteDataSource {
   Future<RatesResponseModel> getLatestRates();
@@ -10,8 +8,8 @@ abstract interface class RatesRemoteDataSource {
 }
 
 class RatesRemoteDataSourceImpl implements RatesRemoteDataSource {
-  RatesRemoteDataSourceImpl(this._dio);
-  final Dio _dio;
+  RatesRemoteDataSourceImpl(this._client);
+  final ApiClient _client;
 
   @override
   Future<RatesResponseModel> getLatestRates() =>
@@ -25,15 +23,11 @@ class RatesRemoteDataSourceImpl implements RatesRemoteDataSource {
     );
   }
 
+  // The client already maps transport/HTTP errors to AppException and guards an
+  // empty body, so this just decodes the JSON into a model.
   Future<RatesResponseModel> _fetch(String url) async {
-    try {
-      final res = await _dio.get<Map<String, dynamic>>(url);
-      final data = res.data;
-      if (data == null) throw const ParseException('Empty response');
-      return RatesResponseModel.fromJson(data, base: ApiConstants.baseCurrency);
-    } on DioException catch (e) {
-      throw mapDioException(e);
-    }
+    final data = await _client.getJson(url);
+    return RatesResponseModel.fromJson(data, base: ApiConstants.baseCurrency);
   }
 
   String _format(DateTime d) =>

@@ -1,3 +1,5 @@
+import 'package:axis_assessment/core/network/api_client.dart';
+import 'package:axis_assessment/core/network/dio_api_client.dart';
 import 'package:axis_assessment/core/network/dio_client.dart';
 import 'package:axis_assessment/core/network/network_info.dart';
 import 'package:axis_assessment/features/rates/data/datasources/rates_local_data_source.dart';
@@ -18,6 +20,7 @@ final GetIt sl = GetIt.instance;
 Future<void> configureDependencies() async {
   sl
     ..registerLazySingleton<Dio>(DioClient.create)
+    ..registerLazySingleton<ApiClient>(() => DioApiClient(sl()))
     ..registerLazySingleton<InternetConnection>(InternetConnection.new);
 
   // --- Core ---
