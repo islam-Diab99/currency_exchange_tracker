@@ -8,9 +8,10 @@ import 'rate_trend_badge.dart';
 /// A single currency row, styled for restraint: a gold-ringed flag, the pair
 /// identity, and a right-aligned EGP value with a quiet trend line beneath.
 class RateCard extends StatelessWidget {
-  const RateCard({super.key, required this.rate});
+  const RateCard({super.key, required this.rate, this.onTap});
 
   final ExchangeRate rate;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -20,66 +21,77 @@ class RateCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-        child: Row(
-          children: [
-            _FlagBadge(flag: currency.flag),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          child: Row(
+            children: [
+              _FlagBadge(flag: currency.flag),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      currency.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '1 ${currency.code} = ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        letterSpacing: 0.3,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    currency.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.2,
+                  RichText(
+                    text: TextSpan(
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                      children: [
+                        TextSpan(text: RateFormatter.rate(rate.rate)),
+                        TextSpan(
+                          text: '  EGP',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.accent(theme.brightness),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '1 ${currency.code} = ',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      letterSpacing: 0.3,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
+                  const SizedBox(height: 5),
+                  RateTrendBadge(rate: rate),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                    children: [
-                      TextSpan(text: RateFormatter.rate(rate.rate)),
-                      TextSpan(
-                        text: '  EGP',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.accent(theme.brightness),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
-                  ),
+              if (onTap != null) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
-                const SizedBox(height: 5),
-                RateTrendBadge(rate: rate),
               ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

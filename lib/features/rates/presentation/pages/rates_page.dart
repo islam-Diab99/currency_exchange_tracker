@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injector.dart';
+import '../../domain/entities/exchange_rate.dart';
+import '../bloc/rate_detail/rate_detail_bloc.dart';
 import '../bloc/rates_list_bloc.dart';
 import '../widgets/rate_card.dart';
 import '../widgets/rates_header.dart';
+import '../widgets/rates_legend.dart';
 import '../widgets/rates_message_view.dart';
 import '../widgets/rates_skeleton.dart';
+import 'currency_detail_page.dart';
 
 /// Screen 1 — live exchange rates for the tracked currencies against EGP.
 class RatesPage extends StatelessWidget {
@@ -14,14 +19,7 @@ class RatesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Exchange Rates'),
-        actions: [
-          // Explicit refresh in addition to pull-to-refresh.
-          _RefreshAction(),
-          const SizedBox(width: 4),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Exchange Rates')),
       body: BlocConsumer<RatesListBloc, RatesListState>(
         // Surface a refresh failure without discarding the cached rates.
         listenWhen: (prev, curr) =>
@@ -69,23 +67,6 @@ class RatesPage extends StatelessWidget {
   }
 }
 
-class _RefreshAction extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Rebuilds only on status change — cheap and localized.
-    final isLoading = context.select<RatesListBloc, bool>(
-      (b) => b.state.status == RatesListStatus.loading,
-    );
-    return IconButton(
-      tooltip: 'Refresh',
-      onPressed: isLoading
-          ? null
-          : () => context.read<RatesListBloc>().add(const RatesListRefreshed()),
-      icon: const Icon(Icons.refresh_rounded),
-    );
-  }
-}
-
 class _RatesList extends StatelessWidget {
   const _RatesList({required this.state});
 
@@ -113,10 +94,38 @@ class _RatesList extends StatelessWidget {
         itemCount: rates.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return RatesHeader(lastUpdated: snapshot.lastUpdated);
+            return Column(
+              children: [
+                RatesHeader(lastUpdated: snapshot.lastUpdated),
+                const RatesLegend(),
+              ],
+            );
           }
-          return RateCard(rate: rates[index - 1]);
+          final rate = rates[index - 1];
+          return RateCard(
+            rate: rate,
+            onTap: () => _openDetail(context, rate, snapshot.lastUpdated),
+          );
         },
+      ),
+    );
+  }
+
+  /// Pushes the detail screen with its own [RateDetailBloc], kicking off the
+  /// 7-day history load. The last-updated time is carried over from the list.
+  void _openDetail(
+    BuildContext context,
+    ExchangeRate rate,
+    DateTime lastUpdated,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider(
+          create: (_) =>
+              sl<RateDetailBloc>()
+                ..add(RateHistoryRequested(rate.currency.code)),
+          child: CurrencyDetailPage(rate: rate, lastUpdated: lastUpdated),
+        ),
       ),
     );
   }
