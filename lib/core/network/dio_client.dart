@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:requests_inspector/requests_inspector.dart';
 
-
 class DioClient {
   const DioClient._();
 

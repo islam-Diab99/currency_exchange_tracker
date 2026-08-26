@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-
 sealed class Failure extends Equatable {
   const Failure(this.message);
 
@@ -12,7 +11,9 @@ sealed class Failure extends Equatable {
 
 /// The API failed or returned an error response.
 class ServerFailure extends Failure {
-  const ServerFailure([super.message = 'Something went wrong. Please try again.']);
+  const ServerFailure([
+    super.message = 'Something went wrong. Please try again.',
+  ]);
 }
 
 /// The device has no internet connection.

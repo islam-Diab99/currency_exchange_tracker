@@ -7,7 +7,6 @@ abstract interface class NetworkInfo {
   Stream<bool> get onConnectivityChanged;
 }
 
-
 class NetworkInfoImpl implements NetworkInfo {
   NetworkInfoImpl(this._connection);
 
@@ -17,6 +16,7 @@ class NetworkInfoImpl implements NetworkInfo {
   Future<bool> get isConnected => _connection.hasInternetAccess;
 
   @override
-  Stream<bool> get onConnectivityChanged => _connection.onStatusChange
-      .map((status) => status == InternetStatus.connected);
+  Stream<bool> get onConnectivityChanged => _connection.onStatusChange.map(
+    (status) => status == InternetStatus.connected,
+  );
 }
