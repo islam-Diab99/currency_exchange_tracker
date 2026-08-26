@@ -14,3 +14,15 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Git Hooks
+
+This repo ships a pre-commit hook that runs `dart format` and `flutter analyze`
+before each commit. Git does not track `.git/hooks/`, so install it once after
+cloning:
+
+```bash
+cp tool/hooks/pre-commit .git/hooks/ && chmod +x .git/hooks/pre-commit
+```
+
+Skip the hook for a single commit with `git commit --no-verify`.
