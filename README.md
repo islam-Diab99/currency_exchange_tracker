@@ -3,6 +3,12 @@
 A Flutter app that shows live EGP exchange rates and a 7-day history per
 currency, with offline support. Built for the Axis assessment.
 
+<p align="center">
+  <img src="screenshots/rates_list.png" alt="Exchange rates list" width="45%" />
+  &nbsp;&nbsp;
+  <img src="screenshots/currency_detail.png" alt="Currency detail with 7-day chart" width="45%" />
+</p>
+
 ## Features
 
 - **Latest rates** — current EGP value of each supported currency, with the
