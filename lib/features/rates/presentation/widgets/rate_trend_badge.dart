@@ -47,7 +47,12 @@ class RateTrendBadge extends StatelessWidget {
         Icon(visual.icon, size: 13, color: visual.color),
         const SizedBox(width: 3),
         Text(
-          hasHistory ? RateFormatter.signedPercent(rate.changePercent) : '—',
+          // Show the daily change as both absolute (EGP) and percentage, per
+          // the spec; a dash when there's no previous day to compare against.
+          hasHistory
+              ? '${RateFormatter.signedChange(rate.changeAbsolute)} · '
+                    '${RateFormatter.signedPercent(rate.changePercent)}'
+              : '—',
           style: TextStyle(
             color: visual.color,
             fontWeight: FontWeight.w600,

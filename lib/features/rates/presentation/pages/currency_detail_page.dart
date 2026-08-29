@@ -274,6 +274,27 @@ class _SummaryCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  // The day's change, spelled out in both EGP and percent.
+                  if (rate.previousRate != null)
+                    Row(
+                      children: [
+                        Icon(visual.icon, size: 15, color: visual.color),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${RateFormatter.signedChange(rate.changeAbsolute)}'
+                          ' EGP · '
+                          '${RateFormatter.signedPercent(rate.changePercent)}'
+                          ' today',
+                          style: TextStyle(
+                            color: visual.color,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 20),
                   Divider(
                     height: 1,
