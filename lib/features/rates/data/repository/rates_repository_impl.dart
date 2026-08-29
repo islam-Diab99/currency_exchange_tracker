@@ -70,7 +70,9 @@ class RatesRepositoryImpl with ResultGuard implements RatesRepository {
         throw const ParseException('No rates in the response.');
       }
 
-      final snapshot = RatesSnapshot(rates: rates, lastUpdated: DateTime.now());
+      // Stamp the snapshot with the data's own date from the API (the "last
+      // update" the user cares about), not the local fetch time.
+      final snapshot = RatesSnapshot(rates: rates, lastUpdated: today.date);
       await _local.cacheSnapshot(snapshot);
       return snapshot;
     });

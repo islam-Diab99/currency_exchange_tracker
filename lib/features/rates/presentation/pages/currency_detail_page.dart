@@ -311,7 +311,7 @@ class _SummaryCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         'Last updated '
-                        '${DateFormat('MMM d, y · HH:mm').format(lastUpdated)}',
+                        '${DateFormat('MMM d, y').format(lastUpdated)}',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 12,

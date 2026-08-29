@@ -124,7 +124,7 @@ class RatesHeader extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         updated != null
-                            ? 'Updated ${DateFormat.jm().format(updated)}'
+                            ? 'Updated ${DateFormat('MMM d, y').format(updated)}'
                             : 'Fetching latest rates',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.62),

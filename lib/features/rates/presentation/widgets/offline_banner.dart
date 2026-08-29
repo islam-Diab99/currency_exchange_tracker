@@ -25,7 +25,7 @@ class OfflineBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Offline — showing saved rates from '
-              '${DateFormat('MMM d, HH:mm').format(lastUpdated)}',
+              '${DateFormat('MMM d, y').format(lastUpdated)}',
               style: TextStyle(
                 color: scheme.onTertiaryContainer,
                 fontSize: 12.5,

@@ -57,6 +57,20 @@ void main() {
       verify(() => local.cacheSnapshot(any())).called(1);
     });
 
+    test("stamps lastUpdated with the API's data date, not now", () async {
+      when(
+        () => remote.getLatestRates(),
+      ).thenAnswer((_) async => responseModel(date: DateTime(2026, 6, 1)));
+      when(
+        () => remote.getRatesForDate(any()),
+      ).thenAnswer((_) async => responseModel());
+
+      final result = await repository.getLatestRates();
+
+      final snap = result.getOrElse(() => throw StateError('expected Right'));
+      expect(snap.lastUpdated, DateTime(2026, 6, 1));
+    });
+
     test("tolerates a missing yesterday — previousRate is null", () async {
       when(
         () => remote.getLatestRates(),
